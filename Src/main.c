@@ -26,6 +26,7 @@
 #include "rcc.h"
 #include "gpio.h"
 #include "spi.h"
+#include "stateMachine.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -60,7 +61,6 @@ static void MX_GPIO_Init(void);
 /* USER CODE BEGIN 0 */
 volatile uint8_t slaveMsg = 0;
 volatile uint8_t masterMsg = 0;
-volatile bool buttonState=false;
 /* USER CODE END 0 */
 
 /**
@@ -174,7 +174,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  buttonState = readGPIO(GPIOA,0);
+
 
     /* USER CODE END WHILE */
 
@@ -237,16 +237,26 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+SMInfo smInfo;
+
 void SPI1_IRQHandler(void){
 	if(SPI1->SR & RXNE_NOT_EMPTY){
 		masterMsg = (SPI1->DR & 0xff);
 	}
+
 }
 
 void SPI4_IRQHandler(void){
 	if(SPI4->SR & RXNE_NOT_EMPTY){
 		slaveMsg = (SPI4->DR & 0xff);
 	}
+	smInfo.slaveMsg=slaveMsg;
+	if(slaveMsg==0x23){
+		smInfo.delay=3;
+	}
+	stateMachineSlave(&smInfo);
+
+
 }
 /* USER CODE END 4 */
 

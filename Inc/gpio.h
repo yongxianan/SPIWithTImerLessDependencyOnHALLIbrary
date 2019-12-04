@@ -26,6 +26,9 @@ struct GPIOx{
 };
 
 void configGPIO(GPIOx *GPIO,uint32_t pin,uint32_t MODER,uint32_t OTYPER,uint32_t OSPEEDR,uint32_t PUPDR,uint32_t AFRLH);
+void setResetGPIO(GPIOx *GPIO, uint32_t pin, bool on);
+bool readGPIO(GPIOx *GPIO, uint32_t pin);
+void toggleGPIO(GPIOx *GPIO, uint32_t pin);
 
 #define	GPIOA	((GPIOx *)(0x40020000))
 #define	GPIOB	((GPIOx *)(0x40020400))

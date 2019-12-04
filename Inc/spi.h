@@ -43,6 +43,7 @@ struct SPIx{
 #define SPI2	((SPI *)(0x40003800))
 
 void spiConfig(SPIx *SPI,uint32_t CR);
+void spiEnable(SPIx *SPI);
 void sendData(SPIx *SPI,uint8_t data);
 uint8_t receiveData(SPIx *SPI);
 

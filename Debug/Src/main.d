@@ -27,6 +27,9 @@ Src/main.o: ../Src/main.c \
  C:/stm32_programming_practice/peripheralsV2/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  C:/stm32_programming_practice/peripheralsV2/Inc/rcc.h \
  C:/stm32_programming_practice/peripheralsV2/Inc/gpio.h \
+ C:/stm32_programming_practice/peripheralsV2/Inc/spi.h \
+ C:/stm32_programming_practice/peripheralsV2/Inc/stateMachine.h \
+ C:/stm32_programming_practice/peripheralsV2/Inc/gpio.h \
  C:/stm32_programming_practice/peripheralsV2/Inc/spi.h
 
 C:/stm32_programming_practice/peripheralsV2/Inc/main.h:
@@ -82,6 +85,12 @@ C:/stm32_programming_practice/peripheralsV2/Drivers/STM32F4xx_HAL_Driver/Inc/stm
 C:/stm32_programming_practice/peripheralsV2/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h:
 
 C:/stm32_programming_practice/peripheralsV2/Inc/rcc.h:
+
+C:/stm32_programming_practice/peripheralsV2/Inc/gpio.h:
+
+C:/stm32_programming_practice/peripheralsV2/Inc/spi.h:
+
+C:/stm32_programming_practice/peripheralsV2/Inc/stateMachine.h:
 
 C:/stm32_programming_practice/peripheralsV2/Inc/gpio.h:
 
