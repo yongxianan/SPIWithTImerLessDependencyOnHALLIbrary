@@ -27,6 +27,7 @@
 #include "gpio.h"
 #include "spi.h"
 #include "stateMachine.h"
+#include "timer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -71,9 +72,9 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
-	RCC->APB2RSTR |= RCC_APB2RSTR_SPI1RST | RCC_APB2RSTR_SPI4RST;
-	RCC->APB2RSTR &= ~(RCC_APB2RSTR_SPI1RST | RCC_APB2RSTR_SPI4RST);
-	RCC->APB2ENR |= (RCC_APB2ENR_SPI1EN | RCC_APB2ENR_SPI4EN);
+	RCC->APB2RSTR |= RCC_APB2RSTR_SPI1RST | RCC_APB2RSTR_SPI4RST | RCC_APB2RSTR_TIM1RST;
+	RCC->APB2RSTR &= ~(RCC_APB2RSTR_SPI1RST | RCC_APB2RSTR_SPI4RST | RCC_APB2RSTR_TIM1RST);
+	RCC->APB2ENR |= (RCC_APB2ENR_SPI1EN | RCC_APB2ENR_SPI4EN | RCC_APB2ENR_TIM1EN);
 
 	RCC->AHB1RSTR |= RCC_AHB1RSTR_GPIOERST | RCC_AHB1RSTR_GPIOARST			\
 			| RCC_AHB1RSTR_GPIOBRST | RCC_AHB1RSTR_GPIOGRST;
@@ -86,7 +87,7 @@ int main(void)
 	 * PG13	green LED
 	 * PA0	blue button
 	 */
-	configGPIOWithoutAF(GPIOA,0,GPIO_INPUT,0,0,PULL_DOWN);
+	configGPIOWithoutAF(GPIOA,0,GPIO_INPUT,0,VERY_HIGH_SPEED,PULL_DOWN);
 	configGPIOWithoutAF(GPIOG,13,GPIO_OUTPUT,OUTPUT_PUSH_PULL			\
 				,HIGH_SPEED,NO_PUPD);
 	/*
@@ -131,12 +132,24 @@ int main(void)
 			| DATA_FRAME_8_BIT | FULL_DUPLEX | MSTR_SLAVE_CONFIG	\
 			| FRF_SPI_MOTOROLA | CPOL_CK0_WHEN_IDLE					\
 			| CPHA_FIRST | SPI_MSB_FIRST | RXNEIE_NOT_MASK);
-	/*
-	 * interrupt number:
-	 * SPI1=35
-	 * SPI4=84
-	 */
+
+
+	//TIM1:
+	//OPM,update interrupt
+	//configAdvancedTIM(TIM1, TIMx_CR1_OPM);
+	configPSC(TIM1,16000000,0.001);
+	configARR(TIM1,2000);
+	config_DMA_ISR(TIM1,TIMx_DIER_UIE);
+	configAdvancedTIM(TIM1,TIMx_CR1_OPM);
+
+
+	//TIM1 update interrupt
+	nvicEnableInterrupt(25);
+
+	//SPI1 interrupt
 	nvicEnableInterrupt(35);
+
+	//SPI4 interrupt
 	nvicEnableInterrupt(84);
   /* USER CODE END 1 */
   
@@ -162,8 +175,14 @@ int main(void)
   /* USER CODE BEGIN 2 */
   spiEnable(SPI1);
   spiEnable(SPI4);
-  //sendData(SPI4,0x30);
-  //sendData(SPI1,0x60);
+
+  sendData(SPI1,0x23);
+  configAdvancedTIM(TIM1,TIMx_CR1_COUNT_EN);
+
+  HAL_Delay(5000);
+
+  sendData(SPI1,0x45);
+  configAdvancedTIM(TIM1,TIMx_CR1_COUNT_EN);
 
   //slaveMsg = receiveData(SPI4);
   //masterMsg = receiveData(SPI1);
@@ -201,7 +220,12 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 64;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -210,8 +234,8 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV4;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
@@ -243,7 +267,7 @@ void SPI1_IRQHandler(void){
 	if(SPI1->SR & RXNE_NOT_EMPTY){
 		masterMsg = (SPI1->DR & 0xff);
 	}
-
+	SPI1->SR &= ~(RXNE_NOT_EMPTY);
 }
 
 void SPI4_IRQHandler(void){
@@ -252,12 +276,19 @@ void SPI4_IRQHandler(void){
 	}
 	smInfo.slaveMsg=slaveMsg;
 	if(slaveMsg==0x23){
-		smInfo.delay=3;
+		smInfo.state=READ_BUTTON_COMMAND;
+	}else if(slaveMsg==0x45){
+		smInfo.state=CONTROL_LED_COMMMAND;
 	}
-	stateMachineSlave(&smInfo);
-
-
+	stateMachineSlaveV2(&smInfo);
+	//SPI4->SR &= ~(RXNE_NOT_EMPTY);
 }
+
+void TIM1_UP_TIM10_IRQHandler(void){
+	sendData(SPI1,0x01);
+	TIM1->SR &= ~(TIMx_SR_UIF);
+}
+
 /* USER CODE END 4 */
 
 /**

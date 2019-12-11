@@ -1,0 +1,79 @@
+SPI_CR1
+
+Bit 15 BIDIMODE: Bidirectional data mode enable
+0: 2-line unidirectional data mode selected
+1: 1-line bidirectional data mode selected
+Note: This bit is not used in I2S mode
+
+Bit 14 BIDIOE: Output enable in bidirectional mode
+This bit combined with the BIDImode bit selects the direction of transfer in bidirectional mode
+0: Output disabled (receive-only mode)
+1: Output enabled (transmit-only mode)
+Note: This bit is not used in I2S mode.
+In master mode, the MOSI pin is used while the MISO pin is used in slave mode.
+
+Bit 10 RXONLY: Receive only
+This bit combined with the BIDImode bit selects the direction of transfer in 2-line
+unidirectional mode. This bit is also useful in a multislave system in which this particular
+slave is not accessed, the output from the accessed slave is not corrupted.
+0: Full duplex (Transmit and receive)
+1: Output disabled (Receive-only mode)
+Note: This bit is not used in I2S mode
+
+SPI_CR2
+
+
+SPI_I2SCFGR
+Bit 11 I2SMOD: I2S mode selection
+0: SPI mode is selected
+1: I2S mode is selected
+Note: This bit should be configured when the SPI or I2S is disabled
+
+
+SPI4_SCK    PE2
+SPI4_NSS    PE4
+SPI4_MISO   PE5
+SPI4_MOSI   PE6
+
+
+SPI1.CLK PA5
+SPI1.NSS PA4
+SPI1.MISO PB4
+SPI1.MOSI PB5
+e2456
+AF5
+
+
+PG13	green LED
+PA0	blue button
+
+
+command		meaning
+0x23		read button state
+0x45		set LED state
+
+
+holding register->shift reg->send out
+
+slave interrupt state machine
+S1=set to S2 before readButtonData function
+S2=send garbage back
+S3=get button data and send back
+S4=disable interrupt
+
+check button state
+MASTER	out	23	00	00	00	00
+				in			XX	XX	XX	XX	YY	<-bit 5 button state
+--------------------------------------------------------------------------
+SLAVE		out	XX	XX	XX	XX	YY
+				in			23	00	00	00	00
+
+
+
+
+control led
+MASTER	out	45	cf
+				in			XX	XX
+------------------------------------
+SLAVE		out	XX	XX
+				in			45	cf

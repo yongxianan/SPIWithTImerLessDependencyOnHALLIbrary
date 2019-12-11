@@ -1,0 +1,4 @@
+prescalerFreq=intFreq/prescaler
+1/period=prescalerFreq
+1/period=intFreq/prescaler
+prescaler=intFreq*period
