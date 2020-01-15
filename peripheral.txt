@@ -63,17 +63,17 @@ S4=disable interrupt
 
 check button state
 MASTER	out	23	00	00	00	00
-				in			XX	XX	XX	XX	YY	<-bit 5 button state
+	in			XX	XX	XX	XX	YY	<-bit 5 button state
 --------------------------------------------------------------------------
 SLAVE		out	XX	XX	XX	XX	YY
-				in			23	00	00	00	00
+		in			23	00	00	00	00
 
 
 
 
 control led
 MASTER	out	45	cf
-				in			XX	XX
+	in			XX	XX
 ------------------------------------
 SLAVE		out	XX	XX
-				in			45	cf
+		in			45	cf

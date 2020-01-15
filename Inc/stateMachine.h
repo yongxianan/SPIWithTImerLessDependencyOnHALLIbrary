@@ -30,6 +30,17 @@ typedef struct{
 	uint8_t slaveMsg;
 }SMInfo;
 
+typedef enum{
+	BUTTON_COMMAND,
+	GET_BUTTON_STATE,
+	LED_COMMAND,
+	SET_LED
+}MasterState;
+
+typedef struct{
+	MasterState state;
+	uint8_t buttonState;
+}MasterInfo;
 void stateMachineSlave(SMInfo *smInfo);
 
 #endif /* STATEMACHINE_H_ */

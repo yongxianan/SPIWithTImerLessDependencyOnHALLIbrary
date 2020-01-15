@@ -62,6 +62,8 @@ static void MX_GPIO_Init(void);
 /* USER CODE BEGIN 0 */
 volatile uint8_t slaveMsg = 0;
 volatile uint8_t masterMsg = 0;
+SMInfo smInfo;
+MasterInfo masterInfo;
 /* USER CODE END 0 */
 
 /**
@@ -126,7 +128,7 @@ int main(void)
 	spiConfig(SPI1,F_PCLK_DIV_256 | UNIDIRECT_DATA_MODE_TWO_LINE	\
 			| DATA_FRAME_8_BIT | FULL_DUPLEX | MSTR_MASTER_CONFIG	\
 			| FRF_SPI_MOTOROLA | CPOL_CK0_WHEN_IDLE					\
-			| CPHA_FIRST | SPI_MSB_FIRST | SSOE_1 | RXNEIE_NOT_MASK);
+			| CPHA_FIRST | SPI_MSB_FIRST | SSOE_1);
 
 	spiConfig(SPI4,F_PCLK_DIV_256 | UNIDIRECT_DATA_MODE_TWO_LINE	\
 			| DATA_FRAME_8_BIT | FULL_DUPLEX | MSTR_SLAVE_CONFIG	\
@@ -138,16 +140,13 @@ int main(void)
 	//OPM,update interrupt
 	//configAdvancedTIM(TIM1, TIMx_CR1_OPM);
 	configPSC(TIM1,16000000,0.001);
-	configARR(TIM1,2000);
+	configARR(TIM1,25);
 	config_DMA_ISR(TIM1,TIMx_DIER_UIE);
 	configAdvancedTIM(TIM1,TIMx_CR1_OPM);
 
 
 	//TIM1 update interrupt
 	nvicEnableInterrupt(25);
-
-	//SPI1 interrupt
-	nvicEnableInterrupt(35);
 
 	//SPI4 interrupt
 	nvicEnableInterrupt(84);
@@ -176,12 +175,6 @@ int main(void)
   spiEnable(SPI1);
   spiEnable(SPI4);
 
-  sendData(SPI1,0x23);
-  configAdvancedTIM(TIM1,TIMx_CR1_COUNT_EN);
-
-  HAL_Delay(5000);
-
-  sendData(SPI1,0x45);
   configAdvancedTIM(TIM1,TIMx_CR1_COUNT_EN);
 
   //slaveMsg = receiveData(SPI4);
@@ -261,15 +254,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-SMInfo smInfo;
-
-void SPI1_IRQHandler(void){
-	if(SPI1->SR & RXNE_NOT_EMPTY){
-		masterMsg = (SPI1->DR & 0xff);
-	}
-	SPI1->SR &= ~(RXNE_NOT_EMPTY);
-}
-
 void SPI4_IRQHandler(void){
 	if(SPI4->SR & RXNE_NOT_EMPTY){
 		slaveMsg = (SPI4->DR & 0xff);
@@ -285,8 +269,9 @@ void SPI4_IRQHandler(void){
 }
 
 void TIM1_UP_TIM10_IRQHandler(void){
-	sendData(SPI1,0x01);
+	stateMachineMaster(&masterInfo);
 	TIM1->SR &= ~(TIMx_SR_UIF);
+	configAdvancedTIM(TIM1,TIMx_CR1_COUNT_EN);
 }
 
 /* USER CODE END 4 */

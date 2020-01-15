@@ -69,7 +69,7 @@ void stateMachineSlaveV2(SMInfo *smInfo){
 			smInfo->state=DO_NOTHING;
 			smInfo->buttonState = readGPIO(GPIOA,0);
 			if(smInfo->buttonState==true){
-				sendData(SPI4,0b00100000);
+				sendData(SPI4,0b00000001);
 			}else{
 				sendData(SPI4,0b00000000);
 			}
@@ -92,8 +92,27 @@ void stateMachineSlaveV2(SMInfo *smInfo){
 			smInfo->state=DO_NOTHING;
 			break;
 	}
+}
 
-	if(smInfo->delay>0){
-		(smInfo->delay)--;
+
+void stateMachineMaster(MasterInfo *masterInfo){
+	switch(masterInfo->state){
+	case BUTTON_COMMAND:
+		sendData(SPI1,0x23);
+		masterInfo->state=GET_BUTTON_STATE;
+		break;
+	case GET_BUTTON_STATE:
+		sendData(SPI1,0x00);//shift button state from slave
+		masterInfo->buttonState = receiveData(SPI1);
+		masterInfo->state=LED_COMMAND;
+		break;
+	case LED_COMMAND:
+		sendData(SPI1,0x45);
+		masterInfo->state=SET_LED;
+		break;
+	case SET_LED:
+		sendData(SPI1,masterInfo->buttonState);
+		masterInfo->state=BUTTON_COMMAND;
+		break;
 	}
 }
