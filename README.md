@@ -20,4 +20,6 @@ void sendData(SPIx *SPI,uint8_t data);
 used by the state machine to send data to SPI buffer.
 ![](https://trello-attachments.s3.amazonaws.com/5e4279e34658360c891fb7ff/5e427a25210f643e75da9bf6/e9feb378efe764c2a87450d549c257a5/SPI_state_machine.png)
 <h6>Figure 4: state machine
+  
+  
 Slave used interrupt to wait and run according to commands, 0x23 for button command event, 0x45 for led command event. Master only using timer interrupt event to send command and shift data out from slave.
